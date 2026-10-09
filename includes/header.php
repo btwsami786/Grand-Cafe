@@ -145,7 +145,7 @@ $user = currentUser();
         <div class="cart-drawer-footer">
             <div class="cart-summary-row">
                 <span>Subtotal</span>
-                <span id="cartSubtotal"><?php echo CURRENCY_SYMBOL; ?>0.00</span>
+                <span id="cartSubtotal"><?php echo CAFE_CURRENCY; ?>0.00</span>
             </div>
             <div class="cart-summary-row">
                 <span>Taxes & Cafe Service</span>
@@ -153,7 +153,7 @@ $user = currentUser();
             </div>
             <div class="cart-summary-total">
                 <span>Total Amount</span>
-                <span id="cartTotal"><?php echo CURRENCY_SYMBOL; ?>0.00</span>
+                <span id="cartTotal"><?php echo CAFE_CURRENCY; ?>0.00</span>
             </div>
             <button type="button" class="btn btn-accent" id="cartCheckoutBtn" style="width: 100%;">
                 <i class="fa-solid fa-credit-card"></i> Proceed to Checkout

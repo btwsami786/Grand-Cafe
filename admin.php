@@ -493,7 +493,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Price (<?php echo CURRENCY_SYMBOL; ?>)</label>
+                    <label class="form-label">Price (<?php echo CAFE_CURRENCY; ?>)</label>
                     <input type="number" step="0.50" min="1" name="price" class="form-control" placeholder="e.g. 135.00" required>
                 </div>
 
@@ -544,7 +544,7 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Price (<?php echo CURRENCY_SYMBOL; ?>)</label>
+                    <label class="form-label">Price (<?php echo CAFE_CURRENCY; ?>)</label>
                     <input type="number" step="0.50" min="1" name="price" id="editItemPrice" class="form-control" required>
                 </div>
 

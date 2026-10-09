@@ -13,8 +13,8 @@ if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: ($_ENV['DB_USER'
 if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? ($_SERVER['DB_PASS'] ?? '')));
 if (!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
 
-// Currency symbol used throughout the application
-if (!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL', '₹');
+// Currency symbol used throughout the application (renamed to CAFE_CURRENCY to avoid reserved PHP internal constant)
+if (!defined('CAFE_CURRENCY')) define('CAFE_CURRENCY', '₹');
 
 try {
     $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
@@ -111,5 +111,5 @@ function e($value) {
  * Helper to format price with cafe currency symbol
  */
 function formatPrice($amount) {
-    return CURRENCY_SYMBOL . number_format((float)$amount, 2);
+    return CAFE_CURRENCY . number_format((float)$amount, 2);
 }
