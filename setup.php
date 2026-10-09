@@ -9,15 +9,42 @@ $port = getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? ($_SERVER['DB_PORT'] ?? '3306'
 $user = getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? ($_SERVER['DB_USER'] ?? 'root'));
 $pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? ($_SERVER['DB_PASS'] ?? ''));
 
+$dbName = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? ($_SERVER['DB_NAME'] ?? 'grand_cafe_db'));
+
 $message = '';
 $status = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install_db'])) {
     try {
-        // Connect to MySQL server without database specified
-        $pdo = new PDO("mysql:host={$host};port={$port};charset=utf8mb4", $user, $pass, [
+        $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-        ]);
+        ];
+
+        $isRemote = ($host !== 'localhost' && $host !== '127.0.0.1');
+        if ($isRemote && defined('PDO::MYSQL_ATTR_SSL_CA')) {
+            $caFile = __DIR__ . '/cacert.pem';
+            if (!file_exists($caFile)) {
+                if (file_exists('/etc/pki/tls/certs/ca-bundle.crt')) {
+                    $caFile = '/etc/pki/tls/certs/ca-bundle.crt';
+                } elseif (file_exists('/etc/ssl/certs/ca-certificates.crt')) {
+                    $caFile = '/etc/ssl/certs/ca-certificates.crt';
+                }
+            }
+            if (file_exists($caFile)) {
+                $options[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
+            }
+            if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+                $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+            }
+        }
+
+        // Connect with SSL enabled
+        $dsn = "mysql:host={$host};port={$port};charset=utf8mb4";
+        if ($isRemote && !empty($dbName)) {
+            $dsn .= ";dbname={$dbName}";
+        }
+
+        $pdo = new PDO($dsn, $user, $pass, $options);
 
         $schemaFile = __DIR__ . '/schema.sql';
         if (!file_exists($schemaFile)) {
@@ -26,11 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install_db'])) {
 
         $sql = file_get_contents($schemaFile);
 
+        // Dynamically map database name if configured differently (e.g. 'test')
+        if (!empty($dbName) && $dbName !== 'grand_cafe_db') {
+            $sql = str_replace('`grand_cafe_db`', "`{$dbName}`", $sql);
+        }
+
         // Execute queries
         $pdo->exec($sql);
 
         $status = 'success';
-        $message = "Database 'grand_cafe_db' and tables were successfully initialized with seed data!";
+        $message = "Database '{$dbName}' and tables were successfully initialized with seed data!";
     } catch (Exception $e) {
         $status = 'error';
         $message = "Error installing database: " . $e->getMessage();

@@ -4,15 +4,15 @@
  * Handles secure PDO connection with error management and helper functions.
  */
 
-define('DB_HOST', getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? ($_SERVER['DB_HOST'] ?? 'localhost')));
-define('DB_PORT', getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? ($_SERVER['DB_PORT'] ?? '3306')));
-define('DB_NAME', getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? ($_SERVER['DB_NAME'] ?? 'grand_cafe_db')));
-define('DB_USER', getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? ($_SERVER['DB_USER'] ?? 'root')));
-define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? ($_SERVER['DB_PASS'] ?? '')));
-define('DB_CHARSET', 'utf8mb4');
+if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? ($_SERVER['DB_HOST'] ?? 'localhost')));
+if (!defined('DB_PORT')) define('DB_PORT', getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? ($_SERVER['DB_PORT'] ?? '3306')));
+if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? ($_SERVER['DB_NAME'] ?? 'grand_cafe_db')));
+if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? ($_SERVER['DB_USER'] ?? 'root')));
+if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? ($_SERVER['DB_PASS'] ?? '')));
+if (!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
 
 // Currency symbol used throughout the application
-define('CURRENCY_SYMBOL', '₹');
+if (!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL', '₹');
 
 try {
     $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
@@ -21,6 +21,25 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
     ];
+
+    // Enable SSL/TLS encryption for remote cloud databases (e.g. TiDB Cloud Serverless, Aiven)
+    $isRemote = (DB_HOST !== 'localhost' && DB_HOST !== '127.0.0.1');
+    if ($isRemote && defined('PDO::MYSQL_ATTR_SSL_CA')) {
+        $caFile = __DIR__ . '/cacert.pem';
+        if (!file_exists($caFile)) {
+            if (file_exists('/etc/pki/tls/certs/ca-bundle.crt')) {
+                $caFile = '/etc/pki/tls/certs/ca-bundle.crt';
+            } elseif (file_exists('/etc/ssl/certs/ca-certificates.crt')) {
+                $caFile = '/etc/ssl/certs/ca-certificates.crt';
+            }
+        }
+        if (file_exists($caFile)) {
+            $options[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
+        }
+        if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
+    }
 
     $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
 } catch (PDOException $e) {
