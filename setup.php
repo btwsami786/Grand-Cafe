@@ -38,13 +38,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install_db'])) {
             }
         }
 
-        // Connect with SSL enabled
-        $dsn = "mysql:host={$host};port={$port};charset=utf8mb4";
-        if ($isRemote && !empty($dbName)) {
-            $dsn .= ";dbname={$dbName}";
+        // Connect to MySQL server (without requiring the database to exist yet)
+        $pdo = null;
+        try {
+            $dsnNoDb = "mysql:host={$host};port={$port};charset=utf8mb4";
+            $pdo = new PDO($dsnNoDb, $user, $pass, $options);
+        } catch (PDOException $eNoDb) {
+            // Some cloud hosts require connecting to an initial existing database (like 'test' in TiDB)
+            try {
+                $dsnTest = "mysql:host={$host};port={$port};dbname=test;charset=utf8mb4";
+                $pdo = new PDO($dsnTest, $user, $pass, $options);
+            } catch (PDOException $eTest) {
+                throw new Exception("Connection failed: " . $eNoDb->getMessage());
+            }
         }
 
-        $pdo = new PDO($dsn, $user, $pass, $options);
+        // Create the target database if not exists and switch to it
+        $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+        $pdo->exec("USE `{$dbName}`;");
 
         $schemaFile = __DIR__ . '/schema.sql';
         if (!file_exists($schemaFile)) {
@@ -53,12 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install_db'])) {
 
         $sql = file_get_contents($schemaFile);
 
-        // Dynamically map database name if configured differently (e.g. 'test')
-        if (!empty($dbName) && $dbName !== 'grand_cafe_db') {
-            $sql = str_replace('`grand_cafe_db`', "`{$dbName}`", $sql);
-        }
+        // Strip hardcoded CREATE DATABASE / USE so queries run safely inside the active $dbName
+        $sql = preg_replace('/CREATE DATABASE IF NOT EXISTS `?[a-zA-Z0-9_]+`?[^;]*;/i', '', $sql);
+        $sql = preg_replace('/USE `?[a-zA-Z0-9_]+`?;/i', '', $sql);
 
-        // Execute queries
+        // Execute schema queries
         $pdo->exec($sql);
 
         $status = 'success';
