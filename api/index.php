@@ -4,6 +4,10 @@
  * Dispatches web requests to the appropriate PHP pages.
  */
 
+// Buffer output so cookies/sessions can be dispatched cleanly
+ob_start();
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $path = trim($uri, '/');
 

@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install_db'])) {
         ];
 
         $isRemote = ($host !== 'localhost' && $host !== '127.0.0.1');
-        if ($isRemote && defined('PDO::MYSQL_ATTR_SSL_CA')) {
+        if ($isRemote) {
             $caFile = __DIR__ . '/cacert.pem';
             if (!file_exists($caFile)) {
                 if (file_exists('/etc/pki/tls/certs/ca-bundle.crt')) {
@@ -30,11 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['install_db'])) {
                     $caFile = '/etc/ssl/certs/ca-certificates.crt';
                 }
             }
-            if (file_exists($caFile)) {
-                $options[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
+            $sslCaConstant = defined('Pdo\Mysql::ATTR_SSL_CA') ? \Pdo\Mysql::ATTR_SSL_CA : (defined('PDO::MYSQL_ATTR_SSL_CA') ? @constant('PDO::MYSQL_ATTR_SSL_CA') : 1000);
+            $sslVerifyConstant = defined('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT') ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') ? @constant('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') : 1014);
+
+            if ($sslCaConstant && file_exists($caFile)) {
+                $options[$sslCaConstant] = $caFile;
             }
-            if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
-                $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+            if ($sslVerifyConstant) {
+                $options[$sslVerifyConstant] = false;
             }
         }
 

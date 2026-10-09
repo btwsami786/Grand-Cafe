@@ -4,6 +4,8 @@
  * Handles secure PDO connection with error management and helper functions.
  */
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? ($_SERVER['DB_HOST'] ?? 'localhost')));
 if (!defined('DB_PORT')) define('DB_PORT', getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? ($_SERVER['DB_PORT'] ?? '3306')));
 if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? ($_SERVER['DB_NAME'] ?? 'grand_cafe_db')));
@@ -24,7 +26,7 @@ try {
 
     // Enable SSL/TLS encryption for remote cloud databases (e.g. TiDB Cloud Serverless, Aiven)
     $isRemote = (DB_HOST !== 'localhost' && DB_HOST !== '127.0.0.1');
-    if ($isRemote && defined('PDO::MYSQL_ATTR_SSL_CA')) {
+    if ($isRemote) {
         $caFile = __DIR__ . '/cacert.pem';
         if (!file_exists($caFile)) {
             if (file_exists('/etc/pki/tls/certs/ca-bundle.crt')) {
@@ -33,11 +35,16 @@ try {
                 $caFile = '/etc/ssl/certs/ca-certificates.crt';
             }
         }
-        if (file_exists($caFile)) {
-            $options[PDO::MYSQL_ATTR_SSL_CA] = $caFile;
+
+        // Support PHP 8.5+ class constants while maintaining backwards compatibility
+        $sslCaConstant = defined('Pdo\Mysql::ATTR_SSL_CA') ? \Pdo\Mysql::ATTR_SSL_CA : (defined('PDO::MYSQL_ATTR_SSL_CA') ? @constant('PDO::MYSQL_ATTR_SSL_CA') : 1000);
+        $sslVerifyConstant = defined('Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT') ? \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT : (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') ? @constant('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') : 1014);
+
+        if ($sslCaConstant && file_exists($caFile)) {
+            $options[$sslCaConstant] = $caFile;
         }
-        if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
-            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        if ($sslVerifyConstant) {
+            $options[$sslVerifyConstant] = false;
         }
     }
 
