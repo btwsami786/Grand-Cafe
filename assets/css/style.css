@@ -647,18 +647,47 @@ img {
 }
 
 .coffee-card-visual {
-    background: linear-gradient(135deg, #4A2E1F 0%, #2C1810 100%);
-    height: 140px;
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+    background: #2C1810;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    color: #FFFFFF;
+}
+
+.coffee-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.coffee-card:hover .coffee-card-img {
+    transform: scale(1.08);
+}
+
+.coffee-card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(44, 24, 16, 0.1) 0%, rgba(44, 24, 16, 0.65) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.coffee-card-visual .badge,
+.coffee-card-visual .badge-category {
+    z-index: 2;
 }
 
 .coffee-card-icon {
     font-size: 3.5rem;
     filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    z-index: 2;
 }
 
 .badge {

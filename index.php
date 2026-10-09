@@ -19,6 +19,20 @@ try {
     $featuredItems = [];
 }
 
+// Curated high-resolution cafe photography
+$coffeePhotos = [
+    'Espresso'         => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
+    'Cappuccino'       => 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=600&q=80',
+    'Cafe Latte'       => 'https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?auto=format&fit=crop&w=600&q=80',
+    'Americano'        => 'https://images.unsplash.com/photo-1551030173-122aabc4489c?auto=format&fit=crop&w=600&q=80',
+    'Mocha'            => 'https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=600&q=80',
+    'Cold Coffee'      => 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=600&q=80',
+    'Filter Coffee'    => 'https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?auto=format&fit=crop&w=600&q=80',
+    'Hazelnut Coffee'  => 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=600&q=80',
+    'Caramel Coffee'   => 'https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=600&q=80',
+];
+$defaultCoffeePhoto = 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80';
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -115,25 +129,16 @@ require_once __DIR__ . '/includes/header.php';
             <div class="coffee-grid">
                 <?php foreach ($featuredItems as $item): ?>
                     <div class="coffee-card" data-id="<?php echo e($item['id']); ?>" data-category="<?php echo e($item['category']); ?>" data-name="<?php echo e($item['item_name']); ?>">
+                        <?php 
+                            $photoUrl = $coffeePhotos[$item['item_name']] ?? $defaultCoffeePhoto;
+                        ?>
                         <div class="coffee-card-visual">
+                            <img src="<?php echo e($photoUrl); ?>" alt="<?php echo e($item['item_name']); ?>" class="coffee-card-img" loading="lazy">
+                            <div class="coffee-card-overlay"></div>
                             <span class="badge-category"><?php echo e($item['category']); ?></span>
                             <span class="badge badge-<?php echo ($item['status'] === 'available') ? 'available' : 'out-of-stock'; ?>">
                                 <?php echo ($item['status'] === 'available') ? 'Available' : 'Sold Out'; ?>
                             </span>
-                            <div class="coffee-card-icon">
-                                <?php 
-                                    $nameLower = strtolower($item['item_name']);
-                                    if (strpos($nameLower, 'cold') !== false) {
-                                        echo '🧊';
-                                    } elseif (strpos($nameLower, 'espresso') !== false) {
-                                        echo '☕';
-                                    } elseif (strpos($nameLower, 'caramel') !== false || strpos($nameLower, 'hazelnut') !== false) {
-                                        echo '✨';
-                                    } else {
-                                        echo '☕';
-                                    }
-                                ?>
-                            </div>
                         </div>
 
                         <div class="coffee-card-body">
